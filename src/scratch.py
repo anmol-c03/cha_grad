@@ -5,9 +5,11 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import torchvision.datasets as datasets
-
+import ssl
 
 np.set_printoptions(suppress=True)
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 train = datasets.MNIST(root='./data', train=True, download=True, transform=None)
@@ -22,6 +24,18 @@ class scratch_net(nn.Module):
         x=F.relu(self.l1(x))
         x=self.l2(x)
         return x
+class SGD:
+    def __init__(self,tensors,lr=0.001):
+        self.tensors=tensors
+        self.lr=lr
+    
+    def zero_grad(self):
+        for t in self.tensors:
+            if t.grad is not None:
+                t.grad=None
+    def step(self):
+        for t in self.tensors:
+            t.data-=self.lr * t.grad  
 
 class Dataloader:
     def __init__(self,data,bs):
@@ -50,9 +64,11 @@ x_train=Dataloader(train,batch_size)
 x_test=Dataloader(test,batch_size)
 
 model=scratch_net()
+lr=0.001
+optim=SGD([model.l1.weight,model.l2.weight],lr)
 losses,accs=[],[]
-optim=torch.optim.Adam(model.parameters())
-for i in (t := trange(1000)):
+steps=2
+for i in (t := trange(steps)):
     optim.zero_grad()
     samp=torch.randint(0,len(x_train),(batch_size,))
     x,y=x_train[samp]
@@ -64,19 +80,23 @@ for i in (t := trange(1000)):
     pred=torch.argmax(logits,dim=-1)
     acc=(pred==y).float().mean()
     accs.append(acc)
-    t.set_description(f'{loss},{acc}')
+    t.set_description(f'{loss:.2f},{acc:.2f}')
     
 plt.plot(accs)
 plt.plot(losses)
 plt.ylim(0,1.5)
 
-samp=torch.randint(0,len(x_test),(batch_size,))
-x,y=x_test[samp]
-logits=model(x)
-pred=torch.argmax(logits,dim=-1)
-loss=F.cross_entropy(logits,y)
-print(y)
-print(pred)
-acc=(pred==y).float().mean()
-print(acc)
-print(loss)
+def eval(x_test,batch_size):
+
+    samp=torch.randint(0,len(x_test),(batch_size,))
+    x,y=x_test[samp]
+    logits=model(x)
+    pred=torch.argmax(logits,dim=-1)
+    loss=F.cross_entropy(logits,y)
+    print(y)
+    print(pred)
+    acc=(pred==y).float().mean()
+    print(acc)
+    print(loss)
+
+eval(x_test,batch_size)
