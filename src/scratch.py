@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 
 from cha_grad.utils import Dataloader,fetch_data
-from cha_grad.nn import SGD
+from cha_grad.optim import SGD,Adam,AdamW
+import cha_grad
 
 
 np.set_printoptions(suppress=True)
@@ -22,16 +23,18 @@ class scratch_net(nn.Module):
         x=self.l2(x)
         return x
     
-batch_size=32
+batch_size=128
 train,test=fetch_data()
 x_train=Dataloader(train,batch_size)
 x_test=Dataloader(test,batch_size)
 
 model=scratch_net()
 lr=0.001
-optim=SGD([model.l1.weight,model.l2.weight],lr)
+weight_decay=0.001
+optim=AdamW([model.l1.weight,model.l2.weight],lr,weight_decay=weight_decay)
+# optim=SGD([model.l1.weight,model.l2.weight],lr)
 losses,accs=[],[]
-steps=2
+steps=1000
 for i in (t := trange(steps)):
     optim.zero_grad()
     samp=torch.randint(0,len(x_train),(batch_size,))
@@ -50,3 +53,5 @@ plt.plot(accs)
 plt.plot(losses)
 plt.ylim(0,1.5)
 
+
+from torch.optim import Adam,AdamW
