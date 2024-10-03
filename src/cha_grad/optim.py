@@ -1,5 +1,6 @@
+import torch
 from torch import Tensor
-import numpy as np
+
 class optimizer:
     def __init__(self,params,lr=0.001):
         self.params=params
@@ -16,17 +17,18 @@ class optimizer:
                 t.grad=None
 
 class SGD(optimizer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,params,lr):
+        super().__init__(params,lr)
         pass
     def step(self):
-        for t in self.tensors:
+        for t in self.params:
+            # print(t.grad)
             t.data-=self.lr * t.grad  
 
 class Adam(optimizer):
     def __init__(self,params,
                  lr=0.001,
-                 eps=1e-7,
+                 eps=1e-8,
                  betas=(0.9, 0.999),
                  weight_decay=0):
         super().__init__(params,lr)
@@ -40,18 +42,20 @@ class Adam(optimizer):
         self.b1=betas[0]
         self.b2=betas[1]
         self.weight_decay=weight_decay
-        self.first_moment=[np.zeros_like(t.grad) for t in self.params]
-        self.second_moment=[np.zeros_like(t.grad) for t in self.params]
+        self.first_moment=[torch.zeros_like(t.data) for t in self.params]
+        self.second_moment=[torch.zeros_like(t.data) for t in self.params]
         self.t=0
+        print(self.lr)
+        print(self.b1,self.b2)
     
     def step(self):
-        for i,t in enumerate(self.params):
+        for i,p in enumerate(self.params):
             self.t+=1
-            self.first_moment[i] = self.b1*self.first_moment[i] + (1.-self.b1)*t.grad
-            self.second_moment[i] = self.b1*self.second_moment[i] + (1.-self.b2)*(t.grad**2)
+            self.first_moment[i] = self.b1*self.first_moment[i] + (1 -self.b1)*p.grad
+            self.second_moment[i] = self.b2*self.second_moment[i] + (1 -self.b2)*(torch.square(p.grad))
             first_unbias=self.first_moment[i] / (1. - self.b1**(self.t))
             second_unbias=self.second_moment[i]  / (1. - self.b2**(self.t))
-            t.data-=self.lr*first_unbias/(np.sqrt(second_unbias)+self.eps)
+            p.data-=self.lr*first_unbias/(torch.sqrt(second_unbias)+self.eps)
             
 
         
