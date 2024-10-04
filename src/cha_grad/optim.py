@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 import numpy as np
-class optimizer:
+class Optimizer:
     def __init__(self,params,lr=0.001):
         self.params=params
         if lr<=0:
@@ -16,7 +16,7 @@ class optimizer:
             if t.grad is not None:
                 t.grad=None
 
-class SGD(optimizer):
+class SGD(Optimizer):
     def __init__(self,params,lr):
         super().__init__(params,lr)
         pass
@@ -25,7 +25,7 @@ class SGD(optimizer):
             # print(t.grad)
             t.data-=self.lr * t.grad  
 
-class Adam(optimizer):
+class Adam(Optimizer):
     def __init__(self,params,
                  lr=0.001,
                  eps=1e-8,
@@ -61,7 +61,7 @@ class Adam(optimizer):
             p.data-=self.lr*first_unbias/(torch.sqrt(second_unbias)+self.eps)
             
 
-class AdamW(optimizer):
+class AdamW(Optimizer):
     def __init__(self,params,
                  lr=0.001,
                  eps=1e-8,
