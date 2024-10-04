@@ -1,7 +1,16 @@
 import torch
+import numpy as np
 import torch.nn.functional as F
+import torch.nn as nn
+
 
 g=torch.Generator().manual_seed(2147483647)
+# class Module:
+#     def __init__(self):
+#         pass
+
+#     def parameters(self,params):
+#         return params
 
 class Linear:
     '''Though i have defined the weights as (fan_in,fan_out)
@@ -139,3 +148,25 @@ class Sequential:
     def parameters(self):
         return [p for layer in self.layers for p in layer.parameters()]
 #----------------------------------------------------------------------------------------------------------------------------------------------      
+class ReLU:
+   def __init__(self):
+      pass
+   
+   def __call__(self, x):
+      pass
+   
+   def parameters(self):
+      return []
+   
+#----------------------------------------------------------------------------------------------------------------------------------------------      
+class CrossEntropyLoss:
+   def __init__(self):
+      pass
+   
+   def __call__(self,logits,y):
+        prob=F.log_softmax(logits,dim=1)
+        loss=-prob[torch.arange(y.shape[0]),y].mean()
+        return loss
+
+   def parameters(self):
+      return []
