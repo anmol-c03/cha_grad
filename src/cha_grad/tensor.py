@@ -146,21 +146,3 @@ class Sub(Function):
     return grad, -grad
 register('sub', Sub)
    
-a=Tensor(np.random.uniform(-1,1,(3,3)))
-b=np.random.uniform(-2,1,(3,3))
-c=Tensor(b)
-b=-b
-d=Tensor(b)
-z=a.sub(c)
-y=a.add(d)
-z.mean().backward()
-e=c.grad
-y.mean().backward()
-f=d.grad
-print(e,'\n',f)
-
-
-
-
-
-
