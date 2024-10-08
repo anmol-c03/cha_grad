@@ -2,7 +2,7 @@
 import functools
 import numpy as np
 
-np.random.seed(1337)
+# np.random.seed(1337)
 def layer__init(fan_in,fan_out):
    return np.random.uniform(-1,1,(fan_in,fan_out))/np.sqrt(fan_out).astype(np.float32)
 
@@ -33,12 +33,12 @@ class Tensor:
             self.grad = np.ones_like(self.data) 
         
         assert(self.grad is not None)
-
         grads=self._prev.backward(self._prev,self.grad)
         if len(self._prev.parents)==1:
             grads=[grads]
         for prev_node,grad in zip(self._prev.parents,grads):
             if prev_node.data.shape!=grad.shape:
+                print(grad,grad.shape)
                 print(f'Error: dimensions of gradients {grad.shape} and parameters {prev_node.data.shape} do not match')
                 assert(False)
             prev_node.grad=grad
@@ -47,11 +47,17 @@ class Tensor:
     def mean(self):
         p=Tensor(np.array([1/self.data.size]))
         return self.sum().mul(p)
+    
+    def cross_entropy(self,y):
+       return  self.mul(y).mean()
 
 class Function:
     def __init__(self,*tensors):
         self.parents = tensors 
         self.saved_tensors = []
+      
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__} with parents {self.parents}'
     
     def save_for_backward(self, *x):
         self.saved_tensors.extend(x)
@@ -220,6 +226,20 @@ class Div(Function):
         return grad_,grad*x
 register('div', Div)
 
+class Logsoftmax(Function):
+  @staticmethod
+  def forward(ctx, logits):
+     max_=logits.max(1,keepdims=True)
+     out=logits-(max_+np.log(np.exp(logits-max_).sum(1,keepdims=True)))
+     ctx.save_for_backward(out)
+     return out
+  
+  @staticmethod
+  def backward(ctx, grad_output):
+    output, = ctx.saved_tensors
+    return grad_output - np.exp(output)*grad_output.sum(axis=1).reshape((-1, 1))
+register('log_softmax', Logsoftmax)
+  
 class Sub(Function):
   @staticmethod
   def forward(ctx, x,y):
@@ -265,27 +285,27 @@ class sigmmoid(Function):
       return x*(1-x)*grad
 register('sigmoid', sigmmoid)
 
-x=layer__init(3,3)
-a=Tensor(x)
-b=Tensor(np.array([3]))
-c=layer__init(3,3)
-d=Tensor(c)
+# x=layer__init(3,3)
+# a=Tensor(x)
+# b=Tensor(np.array([3]))
+# c=layer__init(3,3)
+# d=Tensor(c)
 
-z=a.div(d)
+# z=a.cross_entropy(d)
 # print('z',z)
-z.mean().backward()
+# z.backward()
 # print(a.grad)
-import torch
+# import torch
 
-p=torch.tensor(x,requires_grad=True)
-s=torch.tensor(np.array([3.0]),requires_grad=True)
-r=torch.tensor(c,requires_grad=True)
+# p=torch.tensor(x,requires_grad=True)
+# s=torch.tensor(np.array([3.0]),requires_grad=True)
+# r=torch.tensor(c,requires_grad=True)
 
-q=p/r
-q.mean().backward()
-print(z.data,q)
-print(a.grad,p.grad)
-print(d.grad,r.grad)
-# print((a.grad==p.grad))
+# q=p/r
+# q.mean().backward()
+# print(z.data,q)
+# print(a.grad,p.grad)
+# print(d.grad,r.grad)
+# # print((a.grad==p.grad))
 
-# class Sigmoid(Function)
+# # # class Sigmoid(Function)
