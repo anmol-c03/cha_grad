@@ -35,7 +35,6 @@ class Tensor:
         assert(self.grad is not None)
 
         grads=self._prev.backward(self._prev,self.grad)
-        # print(grads)
         if len(self._prev.parents)==1:
             grads=[grads]
         for prev_node,grad in zip(self._prev.parents,grads):
@@ -72,6 +71,20 @@ class Function:
 def register(name,fxn):
     setattr(Tensor,name,functools.partialmethod(fxn.apply,fxn))
 
+def equal_size(x,y,res_grad):
+    count=0
+    while len(x.shape)!=len(y.shape): 
+      x=np.expand_dims(x,axis=0)
+      count+=1
+    for i in range(len(x.shape)):
+      if x.shape[i]==1:
+          res_grad=res_grad.sum(i,keepdims=True)
+    
+    for _ in range(count):
+        res_grad=res_grad.squeeze(0)
+    return res_grad
+          # return np.array([res_grad])
+
 class ReLU(Function):
   @staticmethod
   def forward(ctx, x):
@@ -92,7 +105,16 @@ class Add(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    return grad, grad
+    if x.size==y.size:
+       return grad, grad
+    else:  
+      max=x.size>y.size    
+      if max:
+        grad_=equal_size(y,x,grad)
+        return grad,grad_
+      else:
+        grad_=equal_size(x,y,grad)
+        return grad_,grad
 register('add', Add)
 
 class MUL(Function):
@@ -103,7 +125,12 @@ class MUL(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    return grad*y,grad*x
+    if x.size==1:
+       return np.array([(grad*y).sum()]),grad*x
+    elif y.size==1 :
+       return grad*x,np.array([(grad*y).sum()])
+    else:
+      return grad*y,grad*x
 register('mul', MUL)
 
 class pow(Function):
@@ -116,17 +143,33 @@ class pow(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y,out = ctx.saved_tensors
-    return grad * np.power(x, y-1) * y, (grad * out * np.log(x)).sum()
+    if not (x>0).all():
+       raise Exception ('Domain error of log results error in backprop ')
+
+    else:
+      return grad * np.power(x, y-1) * y, (grad * out * np.log(x)).sum()
 
 register('pow', pow)
 
 class log(Function):
+   ''' This is special implementation of log function i prepared for special purposes
+      How it differs?
+      Normal log when encounters negative number  give domain error
+      This log is used in special case when user want to take log value abs value of all element and then assign sign to the log value
+       
+        
+         Example:
+          x=[-1,2,3,-4]
+          b=[-1,1,1,-1]
+           
+          output:
+           np.log(abs(x)) doesnot throw domain error as all values are positive  
+           b*nlog(a) assign sign correspondingly'''
    @staticmethod
    def forward(ctx, x):
      ctx.save_for_backward(x)
-     a=np.where(x>0,x,-x)
      b=np.where(x>0,1,-1)
-     return b * np.log(a) 
+     return b * np.log(abs(x)) 
    @staticmethod
    def backward(ctx, grad):
      x = ctx.saved_tensors[0]
@@ -162,7 +205,12 @@ class Sub(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    return grad, -grad
+    if x.size==1:
+       return np.array([grad.sum()]),-grad
+    elif y.size==1:
+       return grad, np.array([-grad.sum()])
+    else:
+      return grad, -grad
 register('sub', Sub)
   
 class Matmul(Function):
@@ -181,7 +229,7 @@ class sigmmoid(Function):
    @staticmethod
    def forward(ctx, x):
     out=1.0/(1.0+np.exp(-x))
-    ctx.save_for_backward((out))
+    ctx.save_for_backward(out)
     return out
    @staticmethod
    def backward(ctx,grad):
@@ -192,19 +240,26 @@ register('sigmoid', sigmmoid)
 x=layer__init(3,3)
 a=Tensor(x)
 b=Tensor(np.array([3]))
-z=a.sigmoid()
+c=layer__init(3,1)
+d=Tensor(c)
+
+z=a.add(d)
 # print('z',z)
 z.mean().backward()
 # print(a.grad)
 import torch
 
 p=torch.tensor(x,requires_grad=True)
+s=torch.tensor(np.array([3.0]),requires_grad=True)
+r=torch.tensor(c,requires_grad=True)
 
 
-q=torch.nn.functional.sigmoid(p)
+
+q=p+r
 q.mean().backward()
 print(z.data,q)
 print(a.grad,p.grad)
+print(d.grad,r.grad)
 # print((a.grad==p.grad))
 
 # class Sigmoid(Function)
