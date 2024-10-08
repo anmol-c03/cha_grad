@@ -125,12 +125,18 @@ class MUL(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    if x.size==1:
-       return np.array([(grad*y).sum()]),grad*x
-    elif y.size==1 :
-       return grad*x,np.array([(grad*y).sum()])
+    grad_x=grad*y
+    grad_y=grad*x
+    if x.size==y.size:
+      return grad_x, grad_y
     else:
-      return grad*y,grad*x
+      max=x.size>y.size
+      if max:
+        grad_=equal_size(y,x,grad_y)
+        return grad_x,grad_
+      else:
+        grad_=equal_size(y,x,grad_x)
+        return grad_,grad_y
 register('mul', MUL)
 
 class pow(Function):
@@ -152,7 +158,7 @@ class pow(Function):
 register('pow', pow)
 
 class log(Function):
-   ''' This is special implementation of log function i prepared for special purposes
+  ''' This is special implementation of log function i prepared for special purposes
       How it differs?
       Normal log when encounters negative number  give domain error
       This log is used in special case when user want to take log value abs value of all element and then assign sign to the log value
@@ -165,15 +171,16 @@ class log(Function):
           output:
            np.log(abs(x)) doesnot throw domain error as all values are positive  
            b*nlog(a) assign sign correspondingly'''
-   @staticmethod
-   def forward(ctx, x):
-     ctx.save_for_backward(x)
-     b=np.where(x>0,1,-1)
-     return b * np.log(abs(x)) 
-   @staticmethod
-   def backward(ctx, grad):
-     x = ctx.saved_tensors[0]
-     return grad * (1/x)
+  @staticmethod
+  def forward(ctx, x):
+    ctx.save_for_backward(x)
+    b=np.where(x>0,1,-1)
+    return b * np.log(abs(x)) 
+  @staticmethod
+  def backward(ctx, grad):
+    x = ctx.saved_tensors[0]
+    return grad * (1/x)
+
 register('log',log)
 
 class Sum(Function):
@@ -189,12 +196,28 @@ class Sum(Function):
 register('sum', Sum)
 
 class Div(Function):
-   @staticmethod
-   def forward(ctx, x, y):
-     return MUL.forward(ctx,x, 1/y)
-   @staticmethod
-   def backward(ctx, grad):
-      return MUL.backward(ctx,grad)
+  @staticmethod
+  def forward(ctx, x, y):
+    if y.any()==0:
+      raise ValueError ('Divide by zero error')
+    ctx.save_for_backward(x, y)
+    return x/y 
+  
+  @staticmethod
+  def backward(ctx, grad):
+    x, y = ctx.saved_tensors
+    grad_x=grad/y
+    grad_y=-grad*x*np.power(y,-2)
+    if x.size==y.size:
+      return grad_x, grad_y
+    else:
+      max=x.size>y.size
+      if max:
+        grad_=equal_size(y,x,grad_y)
+        return grad*y,grad_
+      else:
+        grad_=equal_size(y,x,grad_x)
+        return grad_,grad*x
 register('div', Div)
 
 class Sub(Function):
@@ -202,15 +225,20 @@ class Sub(Function):
   def forward(ctx, x,y):
     ctx.save_for_backward(x,y)
     return x-y
+  
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    if x.size==1:
-       return np.array([grad.sum()]),-grad
-    elif y.size==1:
-       return grad, np.array([-grad.sum()])
-    else:
-      return grad, -grad
+    if x.size==y.size:
+       return grad, grad
+    else:  
+      max=x.size>y.size    
+      if max:
+        grad_=equal_size(y,x,grad)
+        return grad,-grad_
+      else:
+        grad_=equal_size(x,y,grad)
+        return grad_,-grad
 register('sub', Sub)
   
 class Matmul(Function):
@@ -240,10 +268,10 @@ register('sigmoid', sigmmoid)
 x=layer__init(3,3)
 a=Tensor(x)
 b=Tensor(np.array([3]))
-c=layer__init(3,1)
+c=layer__init(3,3)
 d=Tensor(c)
 
-z=a.add(d)
+z=a.div(d)
 # print('z',z)
 z.mean().backward()
 # print(a.grad)
@@ -253,9 +281,7 @@ p=torch.tensor(x,requires_grad=True)
 s=torch.tensor(np.array([3.0]),requires_grad=True)
 r=torch.tensor(c,requires_grad=True)
 
-
-
-q=p+r
+q=p/r
 q.mean().backward()
 print(z.data,q)
 print(a.grad,p.grad)
