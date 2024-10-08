@@ -109,14 +109,15 @@ register('mul', MUL)
 class pow(Function):
   @staticmethod
   def forward(ctx, x, y):
-    ctx.save_for_backward(x, y)
-    return np.power(x, y)
+    out= np.power(x, y)
+    ctx.save_for_backward(x, y,out)
+    return out
   
   @staticmethod
   def backward(ctx, grad):
-    x, y = ctx.saved_tensors
+    x, y,out = ctx.saved_tensors
+    return grad * np.power(x, y-1) * y, (grad * out * np.log(x)).sum()
 
-    return grad * np.power(x, y-1) * y, grad * np.power(x, y) * np.log(x)
 register('pow', pow)
 
 class log(Function):
@@ -180,27 +181,30 @@ class sigmmoid(Function):
    @staticmethod
    def forward(ctx, x):
     out=1.0/(1.0+np.exp(-x))
-    ctx.save_for_backward(np.array([out]))
+    ctx.save_for_backward((out))
     return out
    @staticmethod
    def backward(ctx,grad):
-      x=ctx.saved_tensors
+      x=ctx.saved_tensors[0]
       return x*(1-x)*grad
 register('sigmoid', sigmmoid)
 
 x=layer__init(3,3)
 a=Tensor(x)
 b=Tensor(np.array([3]))
-z=a.log()
-print('z',z)
+z=a.sigmoid()
+# print('z',z)
 z.mean().backward()
-print(a.grad)
+# print(a.grad)
 import torch
-y=torch.tensor(x)
-p=torch.log(y)
-print(p)
-print((z.data==p.values).all())
+
+p=torch.tensor(x,requires_grad=True)
 
 
+q=torch.nn.functional.sigmoid(p)
+q.mean().backward()
+print(z.data,q)
+print(a.grad,p.grad)
+# print((a.grad==p.grad))
 
 # class Sigmoid(Function)
