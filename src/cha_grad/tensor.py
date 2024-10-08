@@ -3,6 +3,9 @@ import functools
 import numpy as np
 
 np.random.seed(1337)
+def layer__init(fan_in,fan_out):
+   return np.random.uniform(-1,1,(fan_in,fan_out))/np.sqrt(fan_out).astype(np.float32)
+
 class Tensor:
     def __init__(self, data):
 
@@ -32,6 +35,7 @@ class Tensor:
         assert(self.grad is not None)
 
         grads=self._prev.backward(self._prev,self.grad)
+        # print(grads)
         if len(self._prev.parents)==1:
             grads=[grads]
         for prev_node,grad in zip(self._prev.parents,grads):
@@ -111,8 +115,22 @@ class pow(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
+
     return grad * np.power(x, y-1) * y, grad * np.power(x, y) * np.log(x)
 register('pow', pow)
+
+class log(Function):
+   @staticmethod
+   def forward(ctx, x):
+     ctx.save_for_backward(x)
+     a=np.where(x>0,x,-x)
+     b=np.where(x>0,1,-1)
+     return b * np.log(a) 
+   @staticmethod
+   def backward(ctx, grad):
+     x = ctx.saved_tensors[0]
+     return grad * (1/x)
+register('log',log)
 
 class Sum(Function):
   @staticmethod
@@ -145,4 +163,44 @@ class Sub(Function):
     x, y = ctx.saved_tensors
     return grad, -grad
 register('sub', Sub)
+  
+class Matmul(Function):
+   @staticmethod
+   def forward(ctx, x, y):
+     ctx.save_for_backward(x,y)
+     return np.matmul(x,y)
    
+   @staticmethod
+   def backward(ctx, grad):
+     x, y = ctx.saved_tensors
+     return np.matmul(grad, y.T), np.matmul(x.T, grad)
+register('matmul',Matmul)
+
+class sigmmoid(Function):
+   @staticmethod
+   def forward(ctx, x):
+    out=1.0/(1.0+np.exp(-x))
+    ctx.save_for_backward(np.array([out]))
+    return out
+   @staticmethod
+   def backward(ctx,grad):
+      x=ctx.saved_tensors
+      return x*(1-x)*grad
+register('sigmoid', sigmmoid)
+
+x=layer__init(3,3)
+a=Tensor(x)
+b=Tensor(np.array([3]))
+z=a.log()
+print('z',z)
+z.mean().backward()
+print(a.grad)
+import torch
+y=torch.tensor(x)
+p=torch.log(y)
+print(p)
+print((z.data==p.values).all())
+
+
+
+# class Sigmoid(Function)
