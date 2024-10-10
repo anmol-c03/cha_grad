@@ -91,7 +91,7 @@ python3 src/my_script.py
 
 Project Structure
 The folder structure of the project is as follows:
-```bash
+```python 
 cha_grad/
 ├── notebook/
 │   └── NN_from_scratch.ipynb    # Jupyter notebook for neural network example
