@@ -16,7 +16,7 @@ Features :
 
 # Installation Steps
 1.Clone the repository:
-```bash
+```python
 git clone https://github.com/anmol-c03/cha_grad.git
 ```
 
