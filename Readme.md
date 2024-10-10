@@ -16,7 +16,7 @@ Features :
 
 # Installation Steps
 1.Clone the repository:
-```python
+```bash
 git clone https://github.com/anmol-c03/cha_grad.git
 ```
 
@@ -31,7 +31,7 @@ pip install numpy
 
 # Example
 Implementing in cha_grad and in pytorch
-```bash
+```python
 from cha_grad.tensor import Tensor,layer__init
 
 a=Tensor(layer__init(3,3))
@@ -47,7 +47,7 @@ print(b .grad)
 ```
 
 Implementing in pytorch
-```bash
+```python
 import torch
 a=torch.randn(3,3,requires_grad=True)
 b=torch.randn(1,3,requires_grad=True)
