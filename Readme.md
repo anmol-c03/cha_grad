@@ -11,7 +11,7 @@ from cha_grad.tensor import Tensor,layer__init
 
 a=Tensor(layer__init(3,3))
 b=Tensor(layer__init(1,3))
-c=Tensor(3.0)
+c=Tensor(np.array(3.0))
 x=a.add(b)
 z=x.mul(c)
 z.mean().backward()
