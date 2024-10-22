@@ -1,4 +1,4 @@
-# inspired from https://github.com/tinygrad/tinygrad/blob/master/tinygrad/tensor.py
+
 import functools
 import numpy as np
 
@@ -76,6 +76,8 @@ class Function:
     
 def register(name,fxn):
     setattr(Tensor,name,functools.partialmethod(fxn.apply,fxn))
+
+
 
 def equal_size(x,y,res_grad):
     count=0
@@ -285,27 +287,11 @@ class sigmmoid(Function):
       return x*(1-x)*grad
 register('sigmoid', sigmmoid)
 
-# x=layer__init(3,3)
-# a=Tensor(x)
-# b=Tensor(np.array([3]))
-# c=layer__init(3,3)
-# d=Tensor(c)
+class Conv2D(Function):
+   #img (in_c,h,w)
+   @staticmethod
+   def forward(ctx, input,k_size, bias=None, stride=1, padding=0):
+      in_c,out_c,=ctx.saved_tensors
+      for _ in range(out_c):
+        temp=np.random.uniform(-1,1,(in_c,k_size[0],k_size[1]))     
 
-# z=a.cross_entropy(d)
-# print('z',z)
-# z.backward()
-# print(a.grad)
-# import torch
-
-# p=torch.tensor(x,requires_grad=True)
-# s=torch.tensor(np.array([3.0]),requires_grad=True)
-# r=torch.tensor(c,requires_grad=True)
-
-# q=p/r
-# q.mean().backward()
-# print(z.data,q)
-# print(a.grad,p.grad)
-# print(d.grad,r.grad)
-# # print((a.grad==p.grad))
-
-# # # class Sigmoid(Function)
