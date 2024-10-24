@@ -1,4 +1,3 @@
-
 import functools
 import numpy as np
 
@@ -51,6 +50,12 @@ class Tensor:
     def cross_entropy(self,y):
        return  self.mul(y).mean()
 
+
+    def softmax(self):
+        max=Tensor(self.data.max(-1,keepdims=True))
+        t=self.sub(max).exp()
+        return t.div(Tensor(t.data.sum(-1,keepdims=True)))
+    
 class Function:
     def __init__(self,*tensors):
         self.parents = tensors 
@@ -113,16 +118,16 @@ class Add(Function):
   @staticmethod
   def backward(ctx, grad):
     x, y = ctx.saved_tensors
-    if x.size==y.size:
-       return grad, grad
-    else:  
-      max=x.size>y.size    
-      if max:
-        grad_=equal_size(y,x,grad)
-        return grad,grad_
-      else:
-        grad_=equal_size(x,y,grad)
-        return grad_,grad
+    # if x.size==y.size:
+    return grad, grad
+    # else:  
+    #   max=x.size>y.size    
+    #   if max:
+    #     grad_=equal_size(y,x,grad)
+    #     return grad,grad_
+    #   else:
+    #     grad_=equal_size(x,y,grad)
+    #     return grad_,grad
 register('add', Add)
 
 class MUL(Function):
@@ -287,6 +292,35 @@ class sigmmoid(Function):
       return x*(1-x)*grad
 register('sigmoid', sigmmoid)
 
+class exp(Function):
+   @staticmethod
+   def forward(ctx, x):
+    out=np.exp(x)
+    ctx.save_for_backward(out)
+    return out
+   @staticmethod
+   def backward(ctx, grad):
+      out=ctx.saved_tensors[0]
+      return out*grad
+register('exp',exp)
+
+
+
+# class Softmax(Function):
+#    @staticmethod
+#    def forward(ctx, logits):
+#       _exp=(logits-logits.max(-1,keepdims=True)).exp()
+#       prob= _exp/_exp.sum(-1,keepdims=True)
+#       ctx.save_for_backward(prob,_exp,logits)
+#       return prob
+   
+#    @staticmethod
+#    def backward(ctx, grad):
+#       prob,_exp,logits= ctx.saved_tensors
+#       d_exp=grad*_exp.sum(-1,keepdims=True)+grad*_exp
+
+
+
 class Conv2D(Function):
    #img (in_c,h,w)
    @staticmethod
@@ -295,3 +329,31 @@ class Conv2D(Function):
       for _ in range(out_c):
         temp=np.random.uniform(-1,1,(in_c,k_size[0],k_size[1]))     
 
+x=layer__init(3,3)
+a=Tensor(x)
+b=Tensor(np.array([3]))
+c=layer__init(3,1)
+d=Tensor(c)
+
+z=a.softmax()
+print('z',z)
+z.mean().backward()
+import torch
+import torch.nn.functional as F
+
+p=torch.tensor(x,requires_grad=True)
+s=torch.tensor(np.array([3.0]),requires_grad=True)
+r=torch.tensor(c,requires_grad=True)
+
+
+
+q=F.softmax(p,dim=-1)
+print(q)
+q.mean().backward()
+
+# print(z.data,q)
+print(a.grad,p.grad)
+# print(d.grad,r.grad)
+# # print((a.grad==p.grad))
+
+# class Sigmoid(Function)
