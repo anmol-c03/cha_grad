@@ -4,14 +4,20 @@
 This is the fun implementation of deep learning framework,similar to PyTorch,but built from scratch It's base is numpy array wrapped around Tensor class.The purpose is to enhance understanding and readability of deep learning algorithms.
 
 # Overview
-cha_grad aims to provide a better understanding of how deep learning frameworks like PyTorch work under the hood. It is built around the concept of Tensors, allowing for operations such asbackpropagation , all implemented in an easy-to-understand manner.
+cha_grad aims to provide a better understanding of how deep learning frameworks like PyTorch work under the hood. It is built around the concept of Tensors, allowing for operations such as backpropagation , all implemented in an easy-to-understand manner.
 
 The framework is educational and simple, with an emphasis on clarity and readability of both code and algorithm.
+
 Features :
+
     * Custom Tensor class to handle data and gradients.
+
     * Autograd system(cha_grad) for backpropagation.
+
     * Operations like matrix multiplication, addition, etc.
+
     * Basic optimization algorithms (like SGD, Adam) implemented from scratch.
+
     * Example usage with a custom MNIST classifier.
 
 # Installation Steps
