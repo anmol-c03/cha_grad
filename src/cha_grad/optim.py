@@ -1,5 +1,4 @@
-import torch
-from torch import Tensor
+from cha_grad.tensor import Tensor
 import numpy as np
 class Optimizer:
     def __init__(self,params,lr=0.001):
@@ -10,6 +9,7 @@ class Optimizer:
             raise ValueError('Learning rate and tensors shouldnot be tensors')
         
         self.lr=lr
+
 
     def zero_grad(self):
         for t in self.params:
@@ -42,23 +42,21 @@ class Adam(Optimizer):
         self.b1=betas[0]
         self.b2=betas[1]
         self.weight_decay=weight_decay
-        self.first_moment=[torch.zeros_like(t.data) for t in self.params]
-        self.second_moment=[torch.zeros_like(t.data) for t in self.params]
+        self.first_moment=[np.zeros_like(t.data) for t in self.params]
+        self.second_moment=[np.zeros_like(t.data) for t in self.params]
         self.t=0
-        print(self.lr)
-        print(self.b1,self.b2)
     
     def step(self):
+        self.t+=1
         for i,p in enumerate(self.params):
-            self.t+=1
             grad=p.grad
             if self.weight_decay!=0:
                 grad+=self.weight_decay*p.data
             self.first_moment[i] = self.b1*self.first_moment[i] + (1 -self.b1)*grad
-            self.second_moment[i] = self.b2*self.second_moment[i] + (1 -self.b2)*(torch.square(grad))
+            self.second_moment[i] = self.b2*self.second_moment[i] + (1 -self.b2)*(np.square(grad))
             first_unbias=self.first_moment[i] / (1. - self.b1**(self.t))
             second_unbias=self.second_moment[i]  / (1. - self.b2**(self.t))
-            p.data-=self.lr*first_unbias/(torch.sqrt(second_unbias)+self.eps)
+            p.data-=self.lr*first_unbias/(np.sqrt(second_unbias)+self.eps)
             
 
 class AdamW(Optimizer):
@@ -78,11 +76,11 @@ class AdamW(Optimizer):
         self.b1=betas[0]
         self.b2=betas[1]
         self.weight_decay=weight_decay
-        self.first_moment=[torch.zeros_like(t.data) for t in self.params]
-        self.second_moment=[torch.zeros_like(t.data) for t in self.params]
+        self.first_moment=[np.zeros_like(t.data) for t in self.params]
+        self.second_moment=[np.zeros_like(t.data) for t in self.params]
         self.t=0
         
-    # still ha to define and look upto the scheduler
+    # still has to define and look upto the scheduler
     def scheduler(self,i):
         return 1
     
@@ -93,9 +91,9 @@ class AdamW(Optimizer):
             if self.weight_decay!=0:
                 grad+=self.weight_decay*p.data
             self.first_moment[i] = self.b1*self.first_moment[i] + (1 -self.b1)*grad
-            self.second_moment[i] = self.b2*self.second_moment[i] + (1 -self.b2)*(torch.square(grad))
+            self.second_moment[i] = self.b2*self.second_moment[i] + (1 -self.b2)*(np.square(grad))
             first_unbias=self.first_moment[i] / (1. - self.b1**(self.t))
             second_unbias=self.second_moment[i]  / (1. - self.b2**(self.t))
             sch=self.scheduler(self.t)
-            p.data-=sch*(self.lr*first_unbias/(torch.sqrt(second_unbias)+self.eps)+self.weight_decay*p.data)
+            p.data-=sch*(self.lr*first_unbias/(np.sqrt(second_unbias)+self.eps)+self.weight_decay*p.data)
             
