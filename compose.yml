@@ -1,0 +1,5 @@
+version: "3"
+
+services:
+  cha_grad:
+    image: cha_grad:1.0
