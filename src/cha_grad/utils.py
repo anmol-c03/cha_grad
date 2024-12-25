@@ -19,13 +19,13 @@ class Dataloader:
         self.bs=bs
 
     def __getitem__(self,idx):
-        img=torch.zeros(self.bs,28*28)
-        label=torch.zeros(self.bs,1)
+        img=np.zeros((self.bs,784))
+        label=np.zeros((self.bs,1))
 
         for i in range(len(idx)):
-            img[i]=torch.tensor(np.array(self.data[idx[i]][0]).reshape(-1,28*28)).float()
-            label[i]=torch.tensor((self.data[idx[i]][1]))
-        return (img,label.view(-1).long())
+            img[i]=np.array(self.data[idx[i]][0]).reshape(-1,28*28).astype(np.float32)
+            label[i]=(self.data[idx[i]][1])
+        return (img,label.reshape(-1).astype(np.int32))
 
     def __len__(self):
         return len(self.data)
