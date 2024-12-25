@@ -13,4 +13,6 @@ RUN apt update -y && \
     pip install tqdm numpy matplotlib && \
     pip install torch torchvision 
 
-CMD ["python3","scratch.py"]
+CMD ["python3","scratch.py"] 
+# if u want to train your own model, create a new .py script (say new.py ) in src and replace 
+# CMD ["python3","scratch.py"] with CMD ["python3","new.py"] 
