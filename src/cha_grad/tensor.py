@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 
-# np.random.seed(1337)
+np.random.seed(1337)
 def layer__init(fan_in,fan_out):
    return np.random.uniform(-1,1,(fan_in,fan_out))/np.sqrt(fan_out).astype(np.float32)
 
