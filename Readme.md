@@ -35,7 +35,7 @@ docker build -t cha_grad:1.0 .
 3. Run the container
 
 ```bash
-docker-compose -f docker-compose.yml up
+docker-compose -f compose.yml up
 ```
 
 
