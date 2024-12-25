@@ -25,12 +25,19 @@ git clone https://github.com/anmol-c03/cha_grad.git
 
 2.Navigate to the project directory:
 ```bash
-cd src
+cd cha_grad
 ```
-3. Install the required dependencies:
+2. Build the docker image
+
 ```bash
-pip install numpy
+docker build -t cha_grad:1.0 .
 ```
+3. Run the container
+
+```bash
+docker-compose -f docker-compose.yml up
+```
+
 
 # Example
 Implementing in cha_grad and in pytorch
