@@ -28,6 +28,4 @@ jobs:
         with:
           push: true
           platforms: linux,amd64, linux/arm64, 
-          tags: |
-            anizalmuseycai/private_images:latest 
-            anizalmuseycai/private_images:${{ github.run_number }}
+          tags: anizalmuseycai/private_images:${{ github.run_number }}
