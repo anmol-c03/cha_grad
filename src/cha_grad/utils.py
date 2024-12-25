@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 import ssl
 import torchvision.datasets as datasets
