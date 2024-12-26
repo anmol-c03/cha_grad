@@ -3,6 +3,8 @@ name: cha_grad_ci
 on:
   push:
     branches: [ "main" ]
+    paths:
+	    -'src'
   pull_request:
     branches: [ "main" ]
 
