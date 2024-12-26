@@ -40,7 +40,6 @@ class Tensor:
                 print(grad,grad.shape)
                 print(f'Error: dimensions of gradients {grad.shape} and parameters {prev_node.data.shape} do not match')
                 assert(False)
-            print(grad,grad.shape)
             prev_node.grad=grad
             prev_node.backward(False)
     
@@ -201,7 +200,7 @@ class Sum(Function):
 
   @staticmethod
   def backward(ctx, grad):
-    x,_ = ctx.saved_tensors
+    x = ctx.saved_tensors[0]
     return grad * np.ones_like(x)
 register('sum', Sum)
 
