@@ -1,11 +1,11 @@
 import numpy as np
-from tqdm import tqdm,trange
+from tqdm import trange
 
 import matplotlib.pyplot as plt
 
 
 from cha_grad.utils import Dataloader,fetch_data
-from cha_grad.optim import SGD,Adam,AdamW
+from cha_grad.optim import AdamW
 from cha_grad.tensor import Tensor,layer__init
 
 
