@@ -6,12 +6,14 @@ COPY ./src /home/cha_grad
 
 COPY ./notebook /home/cha_grad
 
+COPY ./requirements.txt /home/cha_grad
+
 WORKDIR /home/cha_grad
 
 RUN apt update -y && \
     apt install -y nano && \
-    pip install tqdm numpy matplotlib && \
-    pip install torch torchvision 
+    pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 CMD ["python3","scratch.py"] 
 # if u want to train your own model, create a new .py script (say new.py ) in src and replace 
